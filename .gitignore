@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+vcpkg/
+vcpkg_installed/
+server/vcpkg_installed/
+
+# Next.js build output
+.next/
+frontend/.next/
+out/
+frontend/out/
+
+# C++ Build & Output
+build/
+server/build/
+bin/
+obj/
+CMakeScripts/
+CMakeCache.txt
+CMakeFiles/
+*.exe
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.obj
+*.o
+*.pdb
+*.ilk
+*.exp
+
+# Environment & local settings
+.env.local
+.env.*.local
+frontend/.env.local
+frontend/.env.*.local
+
+# IDE & OS
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.suo
+*.user
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

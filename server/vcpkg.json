@@ -1,0 +1,17 @@
+{
+  "name": "pe-visualizer-server",
+  "version": "2.0.0",
+  "description": "PE Visualizer C++ backend dependencies",
+  "dependencies": [
+    { "name": "boost-beast" },
+    { "name": "boost-asio" },
+    { "name": "boost-filesystem" },
+    { "name": "boost-system" },
+    { "name": "openssl" },
+    { "name": "nlohmann-json" },
+    { "name": "zydis" },
+    { "name": "yara" },
+    { "name": "pkgconf" }
+  ],
+  "builtin-baseline": "c82f74667287d3dc386bce81e44964370c91a289"
+}

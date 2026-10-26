@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #020817;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #1e293b;
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-medium: rgba(255,255,255,0.10);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --accent-cyan: #06b6d4;
+  --accent-cyan-dim: rgba(6,182,212,0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
+}
+
+/* Monospace selection */
+::selection {
+  background: rgba(6, 182, 212, 0.25);
+  color: #e2e8f0;
+}
+
+/* Table styles */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, opacity;
+  transition-duration: 100ms;
+  transition-timing-function: ease;
+}
+
+/* Font settings */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* Hex dump hover */
+.hex-row:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Disasm selected */
+.insn-selected {
+  background: rgba(6, 182, 212, 0.1) !important;
+  border-left: 2px solid #06b6d4;
+}
+
+/* Section RWX warning */
+.section-rwx {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* Entropy gradient for cells */
+.entropy-critical { color: #ef4444; }
+.entropy-high     { color: #f97316; }
+.entropy-medium   { color: #eab308; }
+.entropy-normal   { color: #22c55e; }
+.entropy-low      { color: #64748b; }
+
+/* Anomaly severity indicators */
+.sev-critical { --sev-color: #ef4444; }
+.sev-high     { --sev-color: #f97316; }
+.sev-medium   { --sev-color: #eab308; }
+.sev-low      { --sev-color: #3b82f6; }
+.sev-info     { --sev-color: #64748b; }
+
+/* Panel fade-in */
+@keyframes panelFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.panel-enter {
+  animation: panelFadeIn 0.15s ease forwards;
+}
+
+/* Spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Instruction color classes */
+.insn-call      { color: #c084fc; }
+.insn-jmp       { color: #60a5fa; }
+.insn-jcc       { color: #93c5fd; }
+.insn-ret       { color: #f87171; }
+.insn-nop       { color: #4b5563; }
+.insn-interrupt { color: #fb923c; }
+.insn-syscall   { color: #a78bfa; }
+.insn-privileged{ color: #f43f5e; }
+.insn-stack     { color: #34d399; }
+.insn-mov       { color: #94a3b8; }
+.insn-invalid   { color: #6b7280; }
+.insn-default   { color: #e2e8f0; }
+
+/* Resource tree */
+.resource-tree-node {
+  user-select: none;
+}
+
+/* YARA match highlight */
+.yara-match-critical { border-left: 3px solid #ef4444; }
+.yara-match-high     { border-left: 3px solid #f97316; }
+
+/* Monaco editor override */
+.monaco-editor {
+  border-radius: 6px;
+}
+.monaco-editor .margin {
+  background: #0f172a !important;
+}
+
+/* Panel section headers */
+.section-header {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #475569;
+  padding: 8px 0 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 8px;
+}
+
+/* Tooltip */
+.tooltip {
+  position: relative;
+}
+.tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 10px;
+  font-family: monospace;
+  padding: 3px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 100;
+}
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* Glowing badge for anomalies */
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+}
+.badge-pulse {
+  animation: pulse-red 2s infinite;
+}
+
+/* Dark mode recharts overrides */
+.recharts-cartesian-grid line {
+  stroke: rgba(255,255,255,0.04);
+}
+.recharts-tooltip-wrapper {
+  z-index: 50;
+}
+
+/* Import DLL accordion */
+.import-dll-header {
+  background: linear-gradient(90deg, rgba(15,23,42,0.8), rgba(30,41,59,0.4));
+}
+.import-dll-header:hover {
+  background: linear-gradient(90deg, rgba(15,23,42,1), rgba(30,41,59,0.6));
+}
+
+/* Hex bytes coloring */
+.hex-null    { color: #1e293b; }
+.hex-printable { color: #4ade80; }
+.hex-control   { color: #f87171; }
+.hex-high      { color: #a78bfa; }
