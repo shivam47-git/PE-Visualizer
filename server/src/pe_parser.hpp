@@ -440,13 +440,23 @@ private:
     // Mapping helpers
     const uint8_t* base() const { return m_data.data(); }
     uint64_t       file_size() const { return m_data.size(); }
-    bool           valid_offset(uint64_t off, uint64_t sz = 1) const;
+    bool           valid_offset(uint64_t off, uint64_t sz = 1) const {
+        return off < m_data.size() && (off + sz) <= m_data.size();
+    }
     
     template<typename T>
-    const T* ptr_at(uint64_t offset) const;
+    const T* ptr_at(uint64_t offset) const {
+        if (!valid_offset(offset, sizeof(T))) return nullptr;
+        return reinterpret_cast<const T*>(base() + offset);
+    }
     
     template<typename T>
-    T read_at(uint64_t offset) const;
+    T read_at(uint64_t offset) const {
+        T v{};
+        if (valid_offset(offset, sizeof(T)))
+            std::memcpy(&v, base() + offset, sizeof(T));
+        return v;
+    }
     
     std::string  read_string(uint64_t offset, uint32_t max_len = 512) const;
     std::wstring read_wstring(uint64_t offset, uint32_t max_len = 512) const;

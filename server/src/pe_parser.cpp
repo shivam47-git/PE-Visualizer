@@ -25,25 +25,6 @@ PEParser::PEParser(const std::string& path) : m_path(path) {
 PEParser::PEParser(const std::vector<uint8_t>& data, const std::string& name)
     : m_data(data), m_path(name) {}
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-bool PEParser::valid_offset(uint64_t off, uint64_t sz) const {
-    return off < m_data.size() && (off + sz) <= m_data.size();
-}
-
-template<typename T>
-const T* PEParser::ptr_at(uint64_t offset) const {
-    if (!valid_offset(offset, sizeof(T))) return nullptr;
-    return reinterpret_cast<const T*>(base() + offset);
-}
-
-template<typename T>
-T PEParser::read_at(uint64_t offset) const {
-    T v{};
-    if (valid_offset(offset, sizeof(T)))
-        std::memcpy(&v, base() + offset, sizeof(T));
-    return v;
-}
-
 std::string PEParser::read_string(uint64_t offset, uint32_t max_len) const {
     std::string s;
     for (uint32_t i = 0; i < max_len && valid_offset(offset + i); i++) {
@@ -878,6 +859,64 @@ TlsDirectory PEParser::parse_tls() {
 }
 
 // ─── Load Config ─────────────────────────────────────────────────────────────
+#pragma pack(push, 8)
+struct ImageLoadConfig64Full {
+    DWORD      Size;
+    DWORD      TimeDateStamp;
+    WORD       MajorVersion;
+    WORD       MinorVersion;
+    DWORD      GlobalFlagsClear;
+    DWORD      GlobalFlagsSet;
+    DWORD      CriticalSectionDefaultTimeout;
+    ULONGLONG  DeCommitFreeBlockThreshold;
+    ULONGLONG  DeCommitTotalFreeThreshold;
+    ULONGLONG  LockPrefixTable;
+    ULONGLONG  MaximumAllocationSize;
+    ULONGLONG  VirtualMemoryThreshold;
+    ULONGLONG  ProcessAffinityMask;
+    DWORD      ProcessHeapFlags;
+    WORD       CSDVersion;
+    WORD       Reserved1;
+    ULONGLONG  EditList;
+    ULONGLONG  SecurityCookie;
+    ULONGLONG  SEHandlerTable;
+    ULONGLONG  SEHandlerCount;
+    ULONGLONG  GuardCFCheckFunctionPointer;
+    ULONGLONG  GuardCFDispatchFunctionPointer;
+    ULONGLONG  GuardCFFunctionTable;
+    ULONGLONG  GuardCFFunctionCount;
+    DWORD      GuardFlags;
+};
+
+struct ImageLoadConfig32Full {
+    DWORD      Size;
+    DWORD      TimeDateStamp;
+    WORD       MajorVersion;
+    WORD       MinorVersion;
+    DWORD      GlobalFlagsClear;
+    DWORD      GlobalFlagsSet;
+    DWORD      CriticalSectionDefaultTimeout;
+    DWORD      DeCommitFreeBlockThreshold;
+    DWORD      DeCommitTotalFreeThreshold;
+    DWORD      LockPrefixTable;
+    DWORD      MaximumAllocationSize;
+    DWORD      VirtualMemoryThreshold;
+    DWORD      ProcessHeapFlags;
+    DWORD      ProcessAffinityMask;
+    WORD       CSDVersion;
+    WORD       Reserved1;
+    DWORD      EditList;
+    DWORD      SecurityCookie;
+    DWORD      SEHandlerTable;
+    DWORD      SEHandlerCount;
+    DWORD      GuardCFCheckFunctionPointer;
+    DWORD      GuardCFDispatchFunctionPointer;
+    DWORD      GuardCFFunctionTable;
+    DWORD      GuardCFFunctionCount;
+    DWORD      GuardFlags;
+};
+#pragma pack(pop)
+
 LoadConfig PEParser::parse_load_config() {
     LoadConfig lc{};
     auto& lcd = m_data_dirs[IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG];
@@ -886,27 +925,31 @@ LoadConfig PEParser::parse_load_config() {
     if (off == UINT64_MAX) return lc;
     lc.present = true;
     if (m_is_64bit) {
-        auto* l = ptr_at<IMAGE_LOAD_CONFIG_DIRECTORY64>(off);
+        auto* l = ptr_at<ImageLoadConfig64Full>(off);
         if (!l) return lc;
         lc.size                  = l->Size;
         lc.security_cookie       = l->SecurityCookie;
         lc.has_security_cookie   = (l->SecurityCookie != 0);
-        lc.guard_cf_check_function_pointer    = l->GuardCFCheckFunctionPointer;
-        lc.guard_cf_dispatch_function_pointer = l->GuardCFDispatchFunctionPointer;
-        lc.guard_cf_function_table            = l->GuardCFFunctionTable;
-        lc.guard_cf_function_count            = l->GuardCFFunctionCount;
-        lc.guard_flags          = l->GuardFlags;
-        lc.has_cfg              = (l->GuardFlags & 0x100) != 0; // CF_INSTRUMENTED
+        if (l->Size >= offsetof(ImageLoadConfig64Full, GuardFlags) + sizeof(DWORD)) {
+            lc.guard_cf_check_function_pointer    = l->GuardCFCheckFunctionPointer;
+            lc.guard_cf_dispatch_function_pointer = l->GuardCFDispatchFunctionPointer;
+            lc.guard_cf_function_table            = l->GuardCFFunctionTable;
+            lc.guard_cf_function_count            = l->GuardCFFunctionCount;
+            lc.guard_flags          = l->GuardFlags;
+            lc.has_cfg              = (l->GuardFlags & 0x100) != 0; // CF_INSTRUMENTED
+        }
         lc.seh_handler_count    = l->SEHandlerCount;
         lc.has_seh              = (l->SEHandlerCount > 0);
     } else {
-        auto* l = ptr_at<IMAGE_LOAD_CONFIG_DIRECTORY32>(off);
+        auto* l = ptr_at<ImageLoadConfig32Full>(off);
         if (!l) return lc;
         lc.size                  = l->Size;
         lc.security_cookie       = l->SecurityCookie;
         lc.has_security_cookie   = (l->SecurityCookie != 0);
-        lc.guard_flags          = l->GuardFlags;
-        lc.has_cfg              = (l->GuardFlags & 0x100) != 0;
+        if (l->Size >= offsetof(ImageLoadConfig32Full, GuardFlags) + sizeof(DWORD)) {
+            lc.guard_flags          = l->GuardFlags;
+            lc.has_cfg              = (l->GuardFlags & 0x100) != 0;
+        }
         lc.seh_handler_count    = l->SEHandlerCount;
         lc.has_seh              = (l->SEHandlerCount > 0);
     }
